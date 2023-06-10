@@ -27,9 +27,11 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
 
-    const classesCollection = client.db('martialDB').collection('classes');
-    const instructorCollection = client.db('martialDB').collection('instructors');
+    const classesCollection = client.db("martialDB").collection("classes");
+    const instructorCollection = client.db("martialDB").collection("instructors");
+    const cartCollection = client.db("martialDB").collection("carts");
 
+    // classes apis
     app.get('/classes', async (req, res) => {
       const result = await classesCollection.find().sort({
         studentEnroll: -1
@@ -45,11 +47,11 @@ async function run() {
         res.send(classes);
     })
 
-    // // Instructor api
-    // app.get('/all-instructor', async (req, res) => {
-    //     const instructor = await instructorCollection.find().toArray();
-    //     res.send(instructor);
-    // })
+    // Instructor api
+    app.get('/all-instructors', async (req, res) => {
+        const instructor = await instructorCollection.find().toArray();
+        res.send(instructor);
+    })
     // app.get('/instructor', async (req, res) => {
     //     const instructor = await instructorCollection.find().limit(6).toArray();
     //     res.send(instructor);
