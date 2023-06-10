@@ -27,9 +27,58 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
 
+    const studentsCollection = client.db("martialDB").collection("students");
     const classesCollection = client.db("martialDB").collection("classes");
     const instructorCollection = client.db("martialDB").collection("instructors");
     const cartCollection = client.db("martialDB").collection("carts");
+
+    // user api
+    app.get('/students', async(req, res)=>{
+      const result = await studentsCollection.find().toArray();
+      res.send(result)
+    })
+
+    // students api
+    app.post('/students', async (req, res) => {
+      const students = req.body;
+      const query = { email: students.email }
+      const existingStudent = await studentsCollection.findOne(query);
+      if (existingStudent) {
+        return res.send({ message: 'student already exists' })
+      }
+      const result = await studentsCollection.insertOne(students);
+      res.send(result)
+    })
+
+    // updated admin 
+    app.patch('/students/admin/:id', async(req, res)=>{
+      const id = req.params.id;
+      const filter = {_id: new ObjectId(id)};
+      const updatedDoc = {
+        $set: {
+          role: 'admin'
+        },
+      };
+
+      const result = await studentsCollection.updateOne(filter, updatedDoc);
+      res.send(result)
+    })
+
+    // updated instructors 
+    app.patch('/students/instructor/:id', async(req, res)=>{
+      const id = req.params.id;
+      const filter = {_id: new ObjectId(id)};
+      const updatedDoc = {
+        $set: {
+          role: 'instructor'
+        },
+      };
+
+      const result = await studentsCollection.updateOne(filter, updatedDoc);
+      res.send(result)
+    })
+
+
 
     // classes apis
     app.get('/classes', async (req, res) => {
@@ -41,16 +90,16 @@ async function run() {
 
 
     app.get('/top-classes', async (req, res) => {
-        const classes = await classesCollection.find().limit(6).sort({
-            studentEnroll: -1
-        }).toArray();
-        res.send(classes);
+      const classes = await classesCollection.find().limit(6).sort({
+        studentEnroll: -1
+      }).toArray();
+      res.send(classes);
     })
 
     // Instructor api
     app.get('/all-instructors', async (req, res) => {
-        const instructor = await instructorCollection.find().toArray();
-        res.send(instructor);
+      const instructor = await instructorCollection.find().toArray();
+      res.send(instructor);
     })
     // app.get('/instructor', async (req, res) => {
     //     const instructor = await instructorCollection.find().limit(6).toArray();
@@ -59,19 +108,27 @@ async function run() {
 
 
     // cart collection apis
-    app.get('/carts', async(req, res)=>{
+    app.get('/carts', async (req, res) => {
       const email = req.query.email;
-      if(!email){
+      if (!email) {
         res.send([]);
       }
-      const query = {email: email};
+      const query = { email: email };
       const result = await cartCollection.find(query).toArray();
       res.send(result)
     });
-    app.post('/carts', async(req, res)=>{
+    app.post('/carts', async (req, res) => {
       const item = req.body;
       console.log(item);
       const result = await cartCollection.insertOne(item);
+      res.send(result);
+    });
+
+    // delete classes
+    app.delete('/carts/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await cartCollection.deleteOne(query);
       res.send(result);
     })
 
