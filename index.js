@@ -176,6 +176,27 @@ async function run() {
     //     res.send(instructor);
     // })
 
+    // classes api post and get
+
+    // app.get('/classes/:id', async (req, res) => {
+    //   const id = req.params.id;
+    //   console.log(id);
+    //   // let query = {};
+    //   // if (req.query?.email) {
+    //   //   query = { instructorEmail: req.query.email }
+    //   //   console.log(query);
+    //   // }
+    //   // const result = await classesCollection.find(query).toArray();
+    //   // res.send(result);
+    //   // .limit(20).sort({ sub_category: 1 })
+    // })
+
+    app.post('/classes', verifyJWT, verifyInstructor,  async (req, res) => {
+      const newClass = req.body;
+      const result = await classesCollection.insertOne(newClass)
+      res.send(result);
+    })
+
 
     // cart collection apis
     app.get('/carts', verifyJWT, async (req, res) => {
