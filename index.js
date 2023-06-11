@@ -56,8 +56,29 @@ async function run() {
       res.send({ token })
     })
 
+    const verifyAdmin = async (req, res, next)=>{
+      const email = req.decoded.email;
+      const query = {email: email}
+      const user = await studentsCollection.findOne(query);
+      if(user?.role !== 'admin'){
+        return res.status(403).send({error: true, message: 'forbidden message'})
+      }
+      next();
+    }
+    const verifyInstructor = async (req, res, next)=>{
+      const email = req.decoded.email;
+      const query = {email: email}
+      const user = await studentsCollection.findOne(query);
+      if(user?.role !== 'instructor'){
+        return res.status(403).send({error: true, message: 'forbidden message'})
+      }
+      next();
+    }
+
+
+
     // user api
-    app.get('/students', async(req, res)=>{
+    app.get('/students', verifyJWT, verifyAdmin, async(req, res)=>{
       const result = await studentsCollection.find().toArray();
       res.send(result)
     })
