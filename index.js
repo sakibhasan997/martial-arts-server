@@ -48,6 +48,7 @@ async function run() {
     const classesCollection = client.db("martialDB").collection("classes");
     const instructorCollection = client.db("martialDB").collection("instructors");
     const cartCollection = client.db("martialDB").collection("carts");
+    const paymentCollection = client.db("martialDB").collection("payments");
 
     // jwt
     app.post('/jwt', (req, res) => {
@@ -159,6 +160,13 @@ async function run() {
       res.send(result);
     })
 
+    app.delete('/classes/:id', verifyJWT, verifyAdmin, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) }
+      const result = await classesCollection.deleteOne(query);
+      res.send(result);
+    })
+
 
     app.get('/top-classes', async (req, res) => {
       const classes = await classesCollection.find().limit(6).sort({
@@ -203,6 +211,7 @@ async function run() {
     // cart collection apis
     app.get('/carts', verifyJWT, async (req, res) => {
       const email = req.query.email;
+      console.log(email);
       if (!email) {
         res.send([]);
       }
@@ -242,6 +251,21 @@ async function run() {
       res.send({
         clientSecret: paymentIntent.client_secret
       })
+    })
+
+    // payment api
+    app.get('/payments/student',   async (req, res) => {
+      const result = await paymentCollection.find().toArray();
+      res.send(result);
+    });
+    app.post('/payments', verifyJWT, async (req, res) => {
+      const payment = req.body;
+      const insertResult = await paymentCollection.insertOne(payment);
+
+      const query = { _id: { $in: payment.cartItems.map(id => new ObjectId(id)) } }
+      const deleteResult = await cartCollection.deleteMany(query)
+
+      res.send({ insertResult, deleteResult });
     })
 
 
