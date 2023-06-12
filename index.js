@@ -4,6 +4,7 @@ require('dotenv').config();
 const jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
+const stripe = require('stripe')(process.env.PAYMENT_SECRET_KEY)
 const port = process.env.PORT || 5000;
 
 // middleware
@@ -181,18 +182,19 @@ async function run() {
     // app.get('/classes/:id', async (req, res) => {
     //   const id = req.params.id;
     //   console.log(id);
-    //   // let query = {};
-    //   // if (req.query?.email) {
-    //   //   query = { instructorEmail: req.query.email }
-    //   //   console.log(query);
-    //   // }
-    //   // const result = await classesCollection.find(query).toArray();
-    //   // res.send(result);
+    //   let query = {};
+    //   if (req.query?.instructorEmail) {
+    //     query = { instructorEmail: req.query.email }
+    //     console.log(query);
+    //   }
+    //   const result = await classesCollection.find(query).toArray();
+    //   res.send(result);
     //   // .limit(20).sort({ sub_category: 1 })
     // })
 
-    app.post('/classes', verifyJWT, verifyInstructor,  async (req, res) => {
+    app.post('/classes',  async (req, res) => {
       const newClass = req.body;
+      console.log(newClass);
       const result = await classesCollection.insertOne(newClass)
       res.send(result);
     })
@@ -225,6 +227,21 @@ async function run() {
       const query = { _id: new ObjectId(id) };
       const result = await cartCollection.deleteOne(query);
       res.send(result);
+    })
+
+    // payment
+    app.post('/create-payment-intent', verifyJWT, async (req, res) => {
+      const { price } = req.body;
+      const amount = parseInt(price * 100);
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: 'usd',
+        payment_method_types: ['card']
+      });
+
+      res.send({
+        clientSecret: paymentIntent.client_secret
+      })
     })
 
 
